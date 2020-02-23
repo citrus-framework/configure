@@ -1,2 +1,2 @@
-# CitrusCollection
-php collection library
+# Citrus Configure
+php configure library
