@@ -17,11 +17,7 @@ use Citrus\Collection;
  */
 abstract class Configurable
 {
-    /**
-     * 設定値保持
-     *
-     * @var array [['設定キー' => '設定値', ...]]
-     */
+    /** @var array 設定値保持 [['設定キー' => '設定値', ...]] */
     public $configures = [];
 
 
@@ -30,7 +26,7 @@ abstract class Configurable
      * 設定値配列の読み込み
      *
      * @param array $configures 設定値配列(全て)
-     * @return self
+     * @return static
      * @throws ConfigureException
      */
     public function loadConfigures(array $configures = []): self
@@ -70,7 +66,7 @@ abstract class Configurable
             ->toList();
 
         // 設定値チェック
-        $this->validation();
+        $this->validate();
 
         return $this;
     }
@@ -154,10 +150,9 @@ abstract class Configurable
     /**
      * 必須チェック
      *
-     * @return void
      * @throws ConfigureException
      */
-    private function validation(): void
+    private function validate(): void
     {
         // 必須設定キー
         $require_keys = $this->configureRequires();
