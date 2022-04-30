@@ -163,7 +163,10 @@ abstract class Configurable
         {
             if (false === array_key_exists($key, $configures))
             {
-                throw new ConfigureException(sprintf('設定ファイルに %s の設定が存在しません', $key));
+                throw new ConfigureException(sprintf('設定ファイルに %s の設定が存在しません'."\n".'%s',
+                    $key,
+                    var_export($configures, true)
+                ));
             }
         }
     }
