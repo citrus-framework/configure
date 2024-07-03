@@ -18,13 +18,10 @@ use Citrus\Collection;
 abstract class Configurable
 {
     /** @var array 設定値保持 [['設定キー' => '設定値', ...]] */
-    public $configures = [];
-
-
+    public array $configures = [];
 
     /**
      * 設定値配列の読み込み
-     *
      * @param array $configures 設定値配列(全て)
      * @return static
      * @throws ConfigureException
@@ -32,13 +29,13 @@ abstract class Configurable
     public function loadConfigures(array $configures = []): self
     {
         // ドメイン設定されている
-        $is_domainable = $this->isDomainable($configures);
+        $exist_domain_setting = $this->existDomainSetting($configures);
 
         $defaults = []; // デフォルト設定
         $domains = [];  // ドメイン設定
 
         // ドメイン設定されていない
-        if (false === $is_domainable)
+        if (false === $exist_domain_setting)
         {
             /**
              * ドメイン設定されていなくてもdefault設定はされている場合がある
@@ -71,52 +68,40 @@ abstract class Configurable
         return $this;
     }
 
-
-
     /**
      * 設定ルートキー
-     *
      * @return string
      */
-    abstract protected function configureKey(): string;
-
-
+    protected function configureKey(): string
+    {
+        return self::class;
+    }
 
     /**
      * デフォルト設定値
-     *
      * @return array [['設定キー' => '設定値', ...]]
      */
     abstract protected function configureDefaults(): array;
 
-
-
     /**
      * 必須設定値
-     *
      * @return string[]
      */
     abstract protected function configureRequires(): array;
 
-
-
     /**
      * ドメイン設定されている設定配列かどうか
-     *
      * @param array $configures 設定値配列(全て)
      * @return bool true:ドメイン設定されている,false:されていない
      */
-    private function isDomainable(array $configures = []): bool
+    private function existDomainSetting(array $configures = []): bool
     {
         // 設定値配列に 'default' が有り、同階層の配列数が2以上の場合がドメイン設定されている
         return (true === array_key_exists('default', $configures) and 2 <= count($configures));
     }
 
-
-
     /**
      * ドメインコードの取得
-     *
      * @return string ドメインコードの取得
      * @throws ConfigureException
      */
@@ -146,10 +131,8 @@ abstract class Configurable
         throw new ConfigureException('設定ファイルのドメイン設定が不明です');
     }
 
-
     /**
      * 必須チェック
-     *
      * @throws ConfigureException
      */
     private function validate(): void
@@ -161,13 +144,14 @@ abstract class Configurable
         // チェック
         foreach ($require_keys as $key)
         {
-            if (false === array_key_exists($key, $configures))
-            {
-                throw new ConfigureException(sprintf('設定ファイルに %s の設定が存在しません'."\n".'%s',
+            ConfigureException::exceptionElse(
+                array_key_exists($key, $configures),
+                sprintf(
+                    '設定ファイルに %s の設定が存在しません'."\n".'%s',
                     $key,
                     var_export($configures, true)
-                ));
-            }
+                ),
+            );
         }
     }
 }
