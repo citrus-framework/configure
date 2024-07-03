@@ -74,7 +74,7 @@ abstract class Configurable
      */
     protected function configureKey(): string
     {
-        return self::class;
+        return static::class;
     }
 
     /**
