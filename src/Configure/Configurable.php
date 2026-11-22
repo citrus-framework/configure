@@ -28,33 +28,8 @@ abstract class Configurable
      */
     public function loadConfigures(array $configures = []): self
     {
-        // ドメイン設定されている
-        $exist_domain_setting = $this->existDomainSetting($configures);
-
-        $defaults = []; // デフォルト設定
-        $domains = [];  // ドメイン設定
-
-        // ドメイン設定されていない
-        if (false === $exist_domain_setting)
-        {
-            /**
-             * ドメイン設定されていなくてもdefault設定はされている場合がある
-             * 1. 'default' => [ 'key' => {configures} ]
-             * 2. 'key' => {configures}
-             * 3. {configures}
-             */
-            $defaults = (
-                $configures['default'][$this->configureKey()]
-                ?? $configures[$this->configureKey()]
-                ?? $configures
-            );
-        }
-        // ドメイン設定されている
-        else
-        {
-            $defaults = ($configures['default'][$this->configureKey()] ?? []);
-            $domains = ($configures[$this->domainCode()][$this->configureKey()] ?? []);
-        }
+        // デフォルト設定とドメイン設定の選択
+        [$defaults, $domains] = (new ConfigureSelector())->select($configures, $this->configureKey(), new DomainCode());
 
         // デフォルトに、ドメイン設定、デフォルト設定をマージする
         $this->configures = Collection::stream($this->configureDefaults())
@@ -62,8 +37,9 @@ abstract class Configurable
             ->betterMerge($domains)
             ->toList();
 
-        // 設定値チェック
-        $this->validate();
+        // 設定値チェック(継承先が必須設定キーの取得で設定値を補うこともあるので、先に取得する)
+        $require_keys = $this->configureRequires();
+        (new RequireValidator())->validate($this->configures, $require_keys, $this->configureKey());
 
         return $this;
     }
@@ -88,70 +64,4 @@ abstract class Configurable
      * @return string[]
      */
     abstract protected function configureRequires(): array;
-
-    /**
-     * ドメイン設定されている設定配列かどうか
-     * @param array $configures 設定値配列(全て)
-     * @return bool true:ドメイン設定されている,false:されていない
-     */
-    private function existDomainSetting(array $configures = []): bool
-    {
-        // 設定値配列に 'default' が有り、同階層の配列数が2以上の場合がドメイン設定されている
-        return (true === array_key_exists('default', $configures) and 2 <= count($configures));
-    }
-
-    /**
-     * ドメインコードの取得
-     * @return string ドメインコードの取得
-     * @throws ConfigureException
-     */
-    private function domainCode(): string
-    {
-        // httpアクセスの場合
-        if (true === isset($_SERVER['HTTP_HOST']))
-        {
-            return $_SERVER['HTTP_HOST'];
-        }
-
-        // コマンドラインアクセスの場合
-        $options = getopt('', [
-            'domain::',
-        ]);
-        if (true === isset($options['domain']))
-        {
-            return $options['domain'];
-        }
-
-        // デバッグ
-        if (true === defined('UNIT_TEST') and true === UNIT_TEST)
-        {
-            return 'example.com';
-        }
-
-        throw new ConfigureException('設定ファイルのドメイン設定が不明です');
-    }
-
-    /**
-     * 必須チェック
-     * @throws ConfigureException
-     */
-    private function validate(): void
-    {
-        // 必須設定キー
-        $require_keys = $this->configureRequires();
-        // 設定値
-        $configures = $this->configures;
-        // チェック
-        foreach ($require_keys as $key)
-        {
-            ConfigureException::exceptionElse(
-                array_key_exists($key, $configures),
-                sprintf(
-                    '設定ファイルに %s の設定が存在しません'."\n".'%s',
-                    $key,
-                    var_export($configures, true)
-                ),
-            );
-        }
-    }
 }

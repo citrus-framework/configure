@@ -11,6 +11,8 @@ declare(strict_types=1);
 namespace Test\Configure;
 
 use Citrus\Configure\Configurable;
+use Citrus\Configure\ConfigureException;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -24,6 +26,56 @@ class ConfigurableTest extends TestCase
     public function test_todo()
     {
         $this->assertTrue(true);
+    }
+
+    #[Test]
+    public function 必須の設定が無いときの例外の文に設定の値が入らないこと(): void
+    {
+        $sut = new RequireSampleConfigure();
+
+        try
+        {
+            $sut->loadConfigures(['test' => ['password' => 'SECRET_VALUE']]);
+            $this->fail('例外が発生しませんでした');
+        }
+        catch (ConfigureException $e)
+        {
+            $this->assertSame('設定ファイルの test に secret の設定が存在しません', $e->getMessage());
+            $this->assertStringNotContainsString('SECRET_VALUE', $e->getMessage());
+        }
+    }
+}
+
+/**
+ * 必須設定ありのサンプルクラス
+ */
+class RequireSampleConfigure extends Configurable
+{
+    /**
+     * 設定ルートキー
+     * @return string
+     */
+    protected function configureKey(): string
+    {
+        return 'test';
+    }
+
+    /**
+     * デフォルト設定値
+     * @return array
+     */
+    protected function configureDefaults(): array
+    {
+        return [];
+    }
+
+    /**
+     * 必須設定値
+     * @return string[]
+     */
+    protected function configureRequires(): array
+    {
+        return ['secret'];
     }
 }
 
