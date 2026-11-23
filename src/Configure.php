@@ -26,7 +26,7 @@ class Configure
      * 配列から設定
      * @param array $configures 設定配列
      */
-    public static function setUpFromArray(array $configures): void
+    public static function setUpFromArray(#[\SensitiveParameter] array $configures): void
     {
         self::$CONFIGURES = $configures;
     }

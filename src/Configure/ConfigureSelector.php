@@ -23,7 +23,7 @@ class ConfigureSelector
      * @return array [デフォルト設定, ドメイン設定]
      * @throws ConfigureException
      */
-    public function select(array $configures, string $key, DomainCode $domain): array
+    public function select(#[\SensitiveParameter] array $configures, string $key, DomainCode $domain): array
     {
         // ドメイン設定されていない
         if ((new DomainSetting())->exists($configures) === false)

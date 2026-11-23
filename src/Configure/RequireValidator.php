@@ -23,7 +23,7 @@ class RequireValidator
      * @param string   $configure_key 設定ルートキー
      * @throws ConfigureException
      */
-    public function validate(array $configures, array $require_keys, string $configure_key): void
+    public function validate(#[\SensitiveParameter] array $configures, array $require_keys, string $configure_key): void
     {
         foreach ($require_keys as $key)
         {

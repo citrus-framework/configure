@@ -26,7 +26,7 @@ abstract class Configurable
      * @return static
      * @throws ConfigureException
      */
-    public function loadConfigures(array $configures = []): self
+    public function loadConfigures(#[\SensitiveParameter] array $configures = []): self
     {
         // デフォルト設定とドメイン設定の選択
         [$defaults, $domains] = (new ConfigureSelector())->select($configures, $this->configureKey(), new DomainCode());
